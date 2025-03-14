@@ -1,0 +1,101 @@
+AWS command line interface
+
+🔹 What is AWS CLI ?
+The AWS Command Line Interface (AWS CLI) is an open source tool that enables you to interact with AWS services using commands in your command-line shell
+Using AWS CLI, you can automate AWS tasks faster than using the web console.
+
+🔹 Key Benefits
+✅ Faster Deployment – Run commands instead of clicking in AWS Console
+✅ Automation – Use AWS CLI in scripts for Terraform, Ansible, and CI/CD pipelines
+✅ Access to All AWS Services – Manage EC2, S3, IAM, CloudFormation, Lambda, etc.
+✅ Multi-Account & Multi-Region Support – Switch between different AWS accounts easily
+✅ Better Security – Store credentials securely instead of using them in Terraform scripts
+
+🔹 Common AWS CLI Commands
+
+aws s3 ls                      # List all S3 buckets
+aws ec2 describe-instances     # List all EC2 instances
+aws iam list-users             # List IAM users
+aws configure list             # Show current AWS CLI configuration
+aws secretsmanager list-secrets # List all stored secrets
+aws sts get-caller-identity #Verify authentication which configure
+aws ec2 describe-instances --region us-east-1 # list all instance on that particular region Default Region (e.g., us-east-1)
+aws ec2 describe-instances --region us-east-1 --query "Reservations[0].Instances[0].Tags[0]" # list tags assign to instance of 0th index
+
+aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].[Tags[?Key=='Name'].Value |[0] , State.Name, InstanceId]" --output table
+----------------------------------------------
+|              DescribeInstances             |
++--------+-----------+-----------------------+
+|  testVM|  running  |  i-idofVM|
++--------+-----------+-----------------------+
+
+aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].[Tags[?Key=='Name'].Value | [0], Placement.AvailabilityZone]" --output table
+--------------------------
+|    DescribeInstances   |
++---------+--------------+
+|  testVM |  us-east-1a  |
++---------+--------------+
+
+aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].[Tags[?Key=='Name'].Value|[0], Placement.AvailablityZone, InstanceId, State.Name]" --output table
+---------------------------------------------------------
+|                   DescribeInstances                   |
++--------+-------+-----------------------+--------------+
+|  testVM|  None |  i-idofVm  |  terminated  |
++--------+-------+-----------------------+--------------+
+
+1️⃣ aws ec2 describe-instances
+This is the main AWS CLI command that retrieves details of all EC2 instances.
+
+
+2️⃣ --region us-east-1
+This specifies the AWS region where your instances are running.
+👉 You can replace us-east-1 with any region where your instances exist.
+
+
+3️⃣ --query
+The --query flag is used to filter and extract specific details from the command output.
+Now, let’s break down what’s inside the query:
+
+sh
+CopyEdit
+"Reservations[*].Instances[*].[Tags[?Key=='Name'].Value | [0], State.Name]"
+
+✅ Understanding the Query
+Part of Query	Meaning
+Reservations[*]	AWS groups instances into reservations (each API call may return multiple reservations). The [*] means select all reservations.
+.Instances[*]	Inside each reservation, there are instances. [*] means select all instances from those reservations.
+`[Tags[?Key=='Name'].Value	[0], State.Name]`
+
+
+4️⃣ Tags[?Key=='Name'].Value | [0]
+	• Tags → Each instance has multiple tags (Key-Value pairs).
+	• [?Key=='Name'] → Filters tags where the Key is "Name".
+	• .Value → Retrieves the value of the tag (actual instance name).
+	• | [0] → Picks the first matching value (if multiple tags exist).
+👉 Example of an EC2 instance's tags:
+
+json
+CopyEdit
+"Tags": [
+    {
+        "Key": "Environment",
+        "Value": "Production"
+    },
+    {
+        "Key": "Name",
+        "Value": "My-EC2-Instance"
+    }
+]
+
+👉 The query extracts "My-EC2-Instance" from the "Name" tag.
+
+
+5️⃣ State.Name
+	• This retrieves the current state of the instance.
+	• Possible values: "running", "stopped", "terminated", etc.
+
+
+6️⃣ --output table
+	• This formats the output in a nice readable table.
+
+
